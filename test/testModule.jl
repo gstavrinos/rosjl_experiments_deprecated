@@ -10,21 +10,18 @@ println(ROS.ok())
 
 nh = ROS.NodeHandle()
 
-msg = ROS.std_msgs_Int32
+msg = ROS.std_msgs_Int32()
 
-println(fieldnames(msg))
+println(typeof(msg))
+println(fieldnames(typeof(msg)))
+println(msg.data)
+msg.data = 3
+println(msg.data)
 
-msg_ = ROS.std_msgs_Int32()
-
-#println(msg_)
-#println(msg_.data)
-
-ROS.set(msg, :data, 3)
-
-pub = ROS.advertise(nh, "hell_yeah", msg, 1)
+pub = ROS.advertise(nh, "hell_yeah", ROS.std_msgs_Int32, 1)
 
 
 while ROS.ok()
     ROS.spinOnce()
-    ROS.publish(pub, 3)
-end
+    ROS.publish(pub, msg)
+ end
