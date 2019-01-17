@@ -4,7 +4,7 @@ ENV["JULIA_CXX_RTTI"]=1
 using Cxx
 using Libdl
 
-export @rosinclude, init, ok, spin, spinOnce, NodeHandle, advertise, set
+export @rosinclude, init, ok, spin, spinOnce, NodeHandle, advertise
 
 #include("todo.jl")
 
@@ -21,10 +21,10 @@ init(node_name::String) = @cxx ros::init(Int32(length(ARGS)+1), pointer(pointer.
 
 # TODO investigate this further
 NodeHandle() = @cxxnew ros::NodeHandle()
-# TODO generalize this
-advertise(nodehandle, topic_name::String, topic_type, queue_size) = icxx"""$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"""
-# TODO generalize this
-publish(publisher, msg) = icxx"""$(publisher).publish($(msg));"""
+# TODO investigate this further
+advertise(nodehandle, topic_name::String, topic_type, queue_size) = icxx"$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"
+# TODO investigate this further
+publish(publisher, msg) = icxx"$(publisher).publish(*$(msg));"
 
 
 # -------------------------------------------------------------------
@@ -59,13 +59,24 @@ end
 
 types = Dict()
 
-set(rostype, field, value) = icxx"$(rostype).$(field)=$(value)"
+# TODO fix this eval, meta-parsing, global-setting mess!!!!
+function Base.setproperty!(rostype::Cxx.CxxCore.CppPtr, field::Symbol, value) 
+    global uglyhack = rostype
+    eval(Meta.parse("icxx\"\$(uglyhack)->"*string(field)*"=$(value);\""))
+
+end
+
+# TODO fix this eval, meta-parsing, global-setting mess!!!!
+function Base.getproperty(rostype::Cxx.CxxCore.CppPtr, field::Symbol)
+    global uglyhack = rostype
+    eval(Meta.parse("@cxx uglyhack->"*string(field)))
+end
 
 function typeGenerator(pkg, header_file)
     type_name = pkg * "_" * header_file
     rostype_name = pkg * "::" * header_file
     type_generation = "const " * type_name * "=cxxt\"" * rostype_name * "\""
-    class_generation = type_name * "()=@cxx " * rostype_name * "()"
+    class_generation = type_name * "()=@cxxnew " * rostype_name * "()"
     type_export = "export " * type_name
 
     println(type_generation)
