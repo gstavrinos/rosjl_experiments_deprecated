@@ -4,7 +4,7 @@ ENV["JULIA_CXX_RTTI"]=1
 using Cxx
 using Libdl
 
-export @rosinclude, init, ok, spin, spinOnce, NodeHandle, advertise
+export @rosinclude, init, ok, spin, spinOnce, NodeHandle, advertise, subscribe
 
 #include("todo.jl")
 
@@ -17,14 +17,27 @@ ok() = @cxx ros::ok()
 init(node_name::String) = @cxx ros::init(Int32(length(ARGS)+1), pointer(pointer.(pushfirst!(ARGS,PROGRAM_FILE))), pointer(node_name))
 
 
-#TODO support init options
+# TODO support init options
+# TODO support TransportHints in subscribe function
 
 # TODO investigate this further
 NodeHandle() = @cxxnew ros::NodeHandle()
 # TODO investigate this further
-advertise(nodehandle, topic_name::String, topic_type, queue_size) = icxx"$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"
+advertise(nodehandle, topic_name::String, topic_type, queue_size::Int) = icxx"$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"
 # TODO investigate this further
 publish(publisher, msg) = icxx"$(publisher).publish(*$(msg));"
+# TODO investigate this further
+function subscribe(nodehandle, topic_name::String, queue_size::Int, topic_type, callback)
+    #icxx"$(nodehandle)->subscribe($(pointer(topic_name)),$(queue_size),&($(test)));"
+    icxx"""
+        //std::function<void (sensor_msgs::Imu::ConstPtr)> cb = [&](sensor_msgs::Imu::ConstPtr msg) {
+        boost::function<void ($(topic_type))> cpp_callback = [&]($(topic_type) msg) {
+            $:(callback(icxx"return msg;"));
+        };
+        return $(nodehandle)->subscribe<$(topic_type)>($(pointer(topic_name)), $(queue_size), cpp_callback);
+    """
+end
+
 
 
 # -------------------------------------------------------------------
@@ -60,14 +73,15 @@ end
 types = Dict()
 
 # TODO fix this eval, meta-parsing, global-setting mess!!!!
-function Base.setproperty!(rostype::Cxx.CxxCore.CppPtr, field::Symbol, value) 
+function Base.setproperty!(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol, value) 
     global uglyhack = rostype
-    eval(Meta.parse("icxx\"\$(uglyhack)->"*string(field)*"=$(value);\""))
+    operator = rostype isa Cxx.CxxCore.CppValue ? "." : "->"
+    eval(Meta.parse("icxx\"\$(uglyhack)"*operator*string(field)*"=$(value);\""))
 
 end
 
 # TODO fix this eval, meta-parsing, global-setting mess!!!!
-function Base.getproperty(rostype::Cxx.CxxCore.CppPtr, field::Symbol)
+function Base.getproperty(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol)
     global uglyhack = rostype
     eval(Meta.parse("@cxx uglyhack->"*string(field)))
 end
