@@ -28,10 +28,12 @@ NodeHandle() = @cxxnew ros::NodeHandle()
 # macro definitions
 # -------------------------------------------------------------------
 macro rosinclude(expr)
-    n = replace(string(expr), " " => "")[2:end-1]
+    n = replace(string(expr), " " => "")
+    n = replace(n, "(" => "")
+    n = replace(n, ")" => "")
     toinclude = split(n,':')
     if length(toinclude) != 2
-        throw(ErrorException("Error while trying to read @rosinclude "*n))
+        throw(ErrorException("Error while trying to read @rosinclude " * n))
     end
     pkg = string(toinclude[1])
     package_dir = unsafe_string(icxx"ros::package::getPath($(pointer(pkg)));")
@@ -43,7 +45,7 @@ macro rosinclude(expr)
         package_dir = normpath(package_dir, "../..") * additional_folder * "include/" * pkg * "/"
         for header_file in split(toinclude[2],',')
             cxxinclude(joinpath(package_dir, header_file * ".h"))
-            typeGenerator(pkg, header_file)
+            typeGenerator(pkg, header_file, package_dir)
         end
     end
 end
@@ -55,6 +57,8 @@ end
 # -------------------------------------------------------------------
 
 types = Dict()
+
+service_types = Dict()
 
 # TODO fix this eval, meta-parsing, global-setting mess!!!!
 function Base.setproperty!(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol, value) 
@@ -70,19 +74,39 @@ function Base.getproperty(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValu
     eval(Meta.parse("@cxx uglyhack->"*string(field)))
 end
 
-function typeGenerator(pkg, header_file)
+function typeGenerator(pkg, header_file, package_dir)
     type_name = pkg * "_" * header_file
     rostype_name = pkg * "::" * header_file
     type_generation = "const " * type_name * "=cxxt\"" * rostype_name * "\""
     class_generation = type_name * "()=@cxxnew " * rostype_name * "()"
     type_export = "export " * type_name
-
-    println(type_generation)
     eval(Meta.parse(type_generation))
-    println(class_generation)
     eval(Meta.parse(class_generation))
-    println(type_export)
     eval(Meta.parse(type_export))
+
+    # Additional steps for services
+    # One of the two checks is fine, but I make both just to be completely sure
+    if isfile(joinpath(package_dir, header_file * "Request.h")) && isfile(joinpath(package_dir, header_file * "Request.h"))
+        cxxinclude(joinpath(package_dir, header_file * "Request.h"))
+        cxxinclude(joinpath(package_dir, header_file * "Response.h"))
+        type_name_req = type_name * "_Request"
+        type_name_res = type_name * "_Response"
+        rostype_name_req = pkg * "::" * header_file * "::Request"
+        rostype_name_res = pkg * "::" * header_file * "::Response"
+        type_generation_req = "const " * type_name_req * "=cxxt\"" * rostype_name_req * "\""
+        type_generation_res = "const " * type_name_res * "=cxxt\"" * rostype_name_res * "\""
+        class_generation_req = type_name_req * "()=@cxxnew " * rostype_name_req * "()"
+        class_generation_res = type_name_res * "()=@cxxnew " * rostype_name_res * "()"
+        type_export_req = "export " * type_name_req
+        type_export_res = "export " * type_name_res
+        eval(Meta.parse(type_generation_req))
+        eval(Meta.parse(type_generation_res))
+        eval(Meta.parse(class_generation_req))
+        eval(Meta.parse(class_generation_res))
+        eval(Meta.parse(type_export_req))
+        eval(Meta.parse(type_export_res))
+        service_types[eval(Meta.parse("cxxt\"" * rostype_name * "\""))] = [eval(Meta.parse("cxxt\"" * rostype_name_req * "\"")), eval(Meta.parse("cxxt\"" * rostype_name_res * "\""))]
+    end
 end
 
 function ros♥julia()
