@@ -13,7 +13,7 @@ advertise(nodehandle, topic_name::String, topic_type, queue_size::Int) = icxx"$(
 function advertiseService(nodehandle, topic_name::String, topic_type, callback)
     icxx"""
         boost::function<bool ($(service_types[topic_type][1])&, $(service_types[topic_type][2])&)> cpp_callback = [&]($(service_types[topic_type][1]) &req, $(service_types[topic_type][2]) &res) {
-            $:(callback(icxx"return req;", icxx"return res;"));
+            $:(callback(icxx"return &req;", icxx"return &res;"));
             return true;
         };
         return $(nodehandle)->advertiseService($(pointer(topic_name)), cpp_callback);
