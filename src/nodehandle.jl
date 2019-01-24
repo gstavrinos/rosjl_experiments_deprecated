@@ -6,7 +6,7 @@ export advertise, advertiseService, subscribe, shutdown
 # -------------------------------------------------------------------
 
 # TODO support TransportHints in subscribe function
-# TODO creating more than one subscriber of service advertiser, kills the first!
+# TODO creating a service advertiser, kills all the previous service advertisers and subscribers!
 
 # TODO investigate this further
 advertise(nodehandle, topic_name::String, topic_type, queue_size::Int) = icxx"$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"
@@ -24,7 +24,7 @@ end
 function subscribe(nodehandle, topic_name::String, queue_size::Int, topic_type, callback)
     icxx"""
         boost::function<void ($(topic_type))> cpp_callback = [&]($(topic_type) msg) {
-            $:(callback(icxx"return msg;")::Nothing);
+            $:(callback(icxx"return msg;");nothing);
         };
         return $(nodehandle)->subscribe<$(topic_type)>($(pointer(topic_name)), $(queue_size), cpp_callback);
     """
