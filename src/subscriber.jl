@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-export getNumPublishers, getTopic, shutdown
+export getNumPublishers, getTopic
 
 # -------------------------------------------------------------------
 # roscpp functions
@@ -7,4 +7,3 @@ export getNumPublishers, getTopic, shutdown
 
 getNumPublishers(subscriber) = @cxx subscriber->getNumPublishers()
 getTopic(subscriber) = unsafe_string(@cxx subscriber->getTopic())
-shutdown(subscriber) = @cxx subscriber->shutdown()

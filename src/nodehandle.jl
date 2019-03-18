@@ -12,12 +12,38 @@ export advertise, advertiseService, subscribe, shutdown
 advertise(nodehandle, topic_name::String, topic_type, queue_size::Int) = icxx"$(nodehandle)->advertise<$(topic_type)>($(pointer(topic_name)), $(queue_size));"
 
 function advertiseService(nodehandle, topic_name::String, topic_type, callback)
-    icxx"""
-        boost::function<bool ($(service_types[topic_type][1])&, $(service_types[topic_type][2])&)> cpp_srv_callback = [&]($(service_types[topic_type][1]) &req, $(service_types[topic_type][2]) &res) {
-            return $:(callback(icxx"return &req;", icxx"return &res;")::Bool);
-        };
-        return $(nodehandle)->advertiseService($(pointer(topic_name)), cpp_srv_callback);
-    """
+        #//boost::function<bool ($:(@icxx_str("\$(service_types[topic_type][1]);"))&, $:(@icxx_str("\$(service_types[topic_type][2]);"))&)> cpp_srv_callback = 
+        #//[&]($:(@icxx_str("\$(service_types[topic_type][1]);")) &req, $:(@icxx_str("\$(service_types[topic_type][2]);")) &res) {
+    
+
+    #x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field));")
+    #eval(x)
+
+    # eval(Meta.parse("icxx"""
+    #     boost::function<bool ("*service_types[topic_type][1]*"&, "*service_types[topic_type][2]*"&)> cpp_srv_callback = 
+    #     [&]("*service_types[topic_type][1]*" &req, "*service_types[topic_type][2]*" &res) {
+    #         return true;
+    #     };
+    #     return \$(nodehandle)->advertiseService(\$(pointer($topic_name)), cpp_srv_callback);
+    #     """
+    #     "
+    #     )
+    # )
+
+    # icxx"""
+    #     boost::function<bool ($:(@icxx_str("\$(service_types[topic_type][1]);"))&, $:(@icxx_str("\$(service_types[topic_type][2]);"))&)> cpp_srv_callback = 
+    #     [&]($(service_types[topic_type][1]) &req, $(service_types[topic_type][2]) &res) {
+    #         return $:(callback(icxx"return &req;", icxx"return &res;")::Bool);
+    #     };
+    #     return $(nodehandle)->advertiseService($(pointer(topic_name)), cpp_srv_callback);
+    # """
+
+    # icxx"""
+    #     boost::function<bool ($(service_types[topic_type][1])&, $(service_types[topic_type][2])&)> cpp_srv_callback = [&]($(service_types[topic_type][1]) &req, $(service_types[topic_type][2]) &res) {
+    #         return $:(callback(icxx"return &req;", icxx"return &res;")::Bool);
+    #     };
+    #     return $(nodehandle)->advertiseService($(pointer(topic_name)), cpp_srv_callback);
+    # """
 end
 
 # TODO investigate this further

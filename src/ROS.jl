@@ -114,7 +114,7 @@ function typeGenerator(pkg, header_file, package_dir)
         eval(Meta.parse(class_generation_res))
         eval(Meta.parse(type_export_req))
         eval(Meta.parse(type_export_res))
-        service_types[eval(Meta.parse("cxxt\"" * rostype_name * "\""))] = [eval(Meta.parse("cxxt\"" * rostype_name_req * "\"")), eval(Meta.parse("cxxt\"" * rostype_name_res * "\""))]
+        service_types[eval(Meta.parse("cxxt\"" * rostype_name * "\""))] = [rostype_name_req, rostype_name_res]
     end
 end
 
