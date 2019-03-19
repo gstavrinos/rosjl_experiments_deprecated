@@ -40,23 +40,23 @@ PoseStamped_struct() = PoseStamped_struct(Header(0,ROSTime(0,0),""),Pose(Point(0
 function PoseStamped_fix(cpp_type::Cxx.CxxCore.CppPtr)
     t = cpp_type
     p = PoseStamped_struct()
-    p.header.seq = icxx" $cpp_type->header.seq;"
-    p.header.stamp.sec = icxx" $cpp_type->header.stamp.sec;"
-    p.header.stamp.nsec = icxx" $cpp_type->header.stamp.nsec;"
-    p.pose.position.x = icxx" $cpp_type->pose.position.x;"
-    p.pose.position.y = icxx" $cpp_type->pose.position.y;"
-    p.pose.position.z = icxx" $cpp_type->pose.position.z;"
-    p.pose.orientation.x = icxx" $cpp_type->pose.orientation.x;"
-    p.pose.orientation.y = icxx" $cpp_type->pose.orientation.y;"
-    p.pose.orientation.z = icxx" $cpp_type->pose.orientation.z;"
-    p.pose.orientation.w = icxx" &$cpp_type->pose.orientation.w;"
+    p.header.seq = icxx"$cpp_type->header.seq;"
+    p.header.stamp.sec = icxx"$cpp_type->header.stamp.sec;"
+    p.header.stamp.nsec = icxx"$cpp_type->header.stamp.nsec;"
+    p.pose.position.x = icxx"$cpp_type->pose.position.x;"
+    p.pose.position.y = icxx"$cpp_type->pose.position.y;"
+    p.pose.position.z = icxx"$cpp_type->pose.position.z;"
+    p.pose.orientation.x = icxx"$cpp_type->pose.orientation.x;"
+    p.pose.orientation.y = icxx"$cpp_type->pose.orientation.y;"
+    p.pose.orientation.z = icxx"$cpp_type->pose.orientation.z;"
+    p.pose.orientation.w = icxx"&$cpp_type->pose.orientation.w;"
     p.pose.orientation.w = 5
     println(p.pose.orientation.w)
-    println(icxx" $cpp_type->pose.orientation.w;")
+    println(icxx"$cpp_type->pose.orientation.w;")
     return p
 end
 
-function Base.setproperty!(cpp_pointer::Quaternion, field::Symbol, value)
+function Base.setproperty!(cpp_pointer::Quaternion, field::Symbol, value::Number)
     println("lalala1")
     if field == :w
         icxx"*$(cpp_pointer.w) = $value;"
