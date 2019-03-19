@@ -10,6 +10,8 @@ include("publisher.jl")
 include("subscriber.jl")
 include("nodehandle.jl")
 
+include("super_test_stuff.jl")
+
 # -------------------------------------------------------------------
 # roscpp functions
 # -------------------------------------------------------------------
@@ -60,28 +62,28 @@ types = Dict()
 
 service_types = Dict()
 
-# TODO fix this eval, global-setting mess!!!!
-function Base.setproperty!(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol, value) 
-    global uglyhack = rostype
-    operator = rostype isa Cxx.CxxCore.CppValue ? "." : "->"
-    if value isa String
-        x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field))=\"$(value)\";")
-        eval(x)
-    else
-        x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field))=$(value);")
-        eval(x)
-    end
+# # TODO fix this eval, global-setting mess!!!!
+# function Base.setproperty!(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol, value) 
+#     global uglyhack = rostype
+#     operator = rostype isa Cxx.CxxCore.CppValue ? "." : "->"
+#     if value isa String
+#         x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field))=\"$(value)\";")
+#         eval(x)
+#     else
+#         x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field))=$(value);")
+#         eval(x)
+#     end
 
-end
+# end
 
-# TODO fix this eval, global-setting mess!!!!
-function Base.getproperty(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol)
-    global uglyhack = rostype
-    #eval(Meta.parse("@cxx uglyhack->"*string(field)))
-    operator = rostype isa Cxx.CxxCore.CppValue ? "." : "->"
-    x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field));")
-    eval(x)
-end
+# # TODO fix this eval, global-setting mess!!!!
+# function Base.getproperty(rostype::Union{Cxx.CxxCore.CppPtr, Cxx.CxxCore.CppValue}, field::Symbol)
+#     global uglyhack = rostype
+#     #eval(Meta.parse("@cxx uglyhack->"*string(field)))
+#     operator = rostype isa Cxx.CxxCore.CppValue ? "." : "->"
+#     x = Expr(:macrocall, Symbol("@icxx_str"), nothing, "\$(uglyhack)$(operator)$(string(field));")
+#     eval(x)
+# end
 
 function typeGenerator(pkg, header_file, package_dir)
     type_name = pkg * "_" * header_file
