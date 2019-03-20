@@ -14,6 +14,16 @@ function init()
     println(k.pose.position.x)
     k.pose.position.x = 3
     println(k.pose.position.x)
+    j = ROS.PoseStamped2()
+
+    println(k.pose.orientation.x)
+    j.pose.orientation.x = 1
+    j.pose.orientation.z = 1
+    j.pose.orientation.w = 0
+    k.pose.orientation = j.pose.orientation
+    k.pose.orientation.x = j.pose.orientation.w
+    println(k.pose.orientation.x)
 end
 
 init()
+
